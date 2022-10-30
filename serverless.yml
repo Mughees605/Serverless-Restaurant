@@ -1,5 +1,8 @@
 service: production-ready-serverless
 
+plugins:
+  - serverless-pseudo-parameters
+
 provider:
   name: aws
   runtime: nodejs14.x
@@ -12,6 +15,10 @@ provider:
         Fn::GetAtt:
           - restaurantsTable
           - Arn
+    - Effect: Allow
+      Action: execute-api:Invoke
+      Resource: arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+
 functions:
   get-index:
     handler: functions/get-index.handler
@@ -33,8 +40,10 @@ functions:
       - http:
           path: /restaurants/
           method: get
+          authorizer: aws_iam
     environment:
       restaurants_table: !Ref restaurantsTable
+
 
 resources:
   Resources:
