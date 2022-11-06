@@ -18,6 +18,8 @@ provider:
     - Effect: Allow
       Action: execute-api:Invoke
       Resource: arn:aws:execute-api:#{AWS::Region}:#{AWS::AccountId}:*/*/GET/restaurants
+      cognito_user_pool_id: xxx
+      cognito_client_id: xxx
 
 functions:
   get-index:
@@ -41,6 +43,17 @@ functions:
           path: /restaurants/
           method: get
           authorizer: aws_iam
+    environment:
+      restaurants_table: !Ref restaurantsTable
+
+  search-restaurants:
+    handler: functions/search-restaurants.handler
+    events:
+      - http:
+          path: /restaurants/search
+          method: post
+          authorizer:
+            arn: arn:aws:cognito-idp:#{AWS::Region}:#{AWS::AccountId}:userpool/xxx
     environment:
       restaurants_table: !Ref restaurantsTable
 
