@@ -8,9 +8,11 @@ custom:
     overwrite: true
 
 provider:
-  profile: prs
+  profile: default
   name: aws
   runtime: nodejs16.x
+  environment:
+    rest_api_url: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}
 
   iam:
     role:
@@ -33,6 +35,7 @@ functions:
       restaurants_api: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${sls:stage}/restaurants
       cognito_user_pool_id: !Ref CognitoUserPool
       cognito_client_id: !Ref WebCognitoUserPoolClient
+      cognito_server_client_id: !Ref ServerCognitoUserPoolClient
 
   get-restaurants:
     handler: functions/get-restaurants.handler
