@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - dev
+      - test
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment (dev | test | prod)
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-20.04
+    env:
+      SES_FROM_ADDRESS: support@wealthbuilder.io
+      GRAPHCMS_API: https://api-us-east-1.graphcms.com/v2/cjrzfge22493i01f9t1er6al9/master
+      BITRIX_API: https://calltofreedom.bitrix24.com/rest/743/0bn91vnlo7pkxndz
+    steps:
+      - name: Print build number
+        run: echo Build number is $GITHUB_RUN_NUMBER
+
+      - name: Export env-specific vars
+        run: |-
+          ENV=${{ github.event.inputs.env }}
+          if [[ -z $ENV ]]; then
+            case $GITHUB_REF in
+            "refs/heads/dev") ENV=dev ;;
+            "refs/heads/test") ENV=test ;;
+            "refs/heads/main") ENV=prod ;;
+            *) echo "Invalid branch" && exit 1 ;;
+            esac
+          fi
+
+          echo "ENV is $ENV"
+
+          case $ENV in
+          dev)
+            APP_LOGIN_LINK="https://dev.wealthbuilder.io/#/login"
+            WEB_LOGIN_LINK="https://dev.wealthbuilder.io/#/login"
+            APP_PROFILE_LINK="https://dev.wealthbuilder.io/#/profile"
+            ;;
+          test)
+            APP_LOGIN_LINK="https://test.wealthbuilder.io/#/login"
+            WEB_LOGIN_LINK="https://test.wealthbuilder.io/#/login"
+            APP_PROFILE_LINK="https://test.wealthbuilder.io/#/profile"
+            ;;
+          prod)
+            APP_LOGIN_LINK="https://app.wealthbuilder.io/#/login"
+            WEB_LOGIN_LINK="https://app.wealthbuilder.io/#/login"
+            APP_PROFILE_LINK="https://app.wealthbuilder.io/#/profile"
+          esac
+
+          {
+            echo "ENV=$ENV"
+            echo "APP_LOGIN_LINK=$APP_LOGIN_LINK"
+            echo "WEB_LOGIN_LINK=$WEB_LOGIN_LINK"
+            echo "APP_PROFILE_LINK=$APP_PROFILE_LINK"
+          } >> $GITHUB_ENV
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - run: yarn deploy --stage $ENV

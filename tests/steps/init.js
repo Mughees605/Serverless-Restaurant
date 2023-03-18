@@ -1,6 +1,8 @@
 const { promisify } = require('util')
 const awscred = require('awscred')
-require('dotenv').config()
+const dotenv = require('dotenv')
+dotenv.config()
+dotenv.config({ path: '.env-outputs' })
 
 let initialized = false
 
@@ -10,10 +12,12 @@ const init = async () => {
   }
   
   const { credentials, region } = await promisify(awscred.load)()
+
+  console.log("credentials", credentials)
   
   process.env.AWS_ACCESS_KEY_ID     = credentials.accessKeyId
   process.env.AWS_SECRET_ACCESS_KEY = credentials.secretAccessKey
-  process.env.AWS_REGION            = region
+  process.env.AWS_REGION            = "us-east-1"
 
   if (credentials.sessionToken) {
     process.env.AWS_SESSION_TOKEN = credentials.sessionToken

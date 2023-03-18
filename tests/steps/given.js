@@ -10,6 +10,9 @@ const an_authenticated_user = async () => {
   const userpoolId = process.env.cognito_user_pool_id
   const clientId = process.env.cognito_server_client_id
 
+  console.log("userPoolId", userpoolId)
+  console.log("clientId", clientId)
+
   const firstName = chance.first({ nationality: "en" })
   const lastName  = chance.last({ nationality: "en" })
   const suffix    = chance.string({length: 8, pool: "abcdefghijklmnopqrstuvwxyz"})
